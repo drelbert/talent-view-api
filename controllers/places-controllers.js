@@ -1,10 +1,13 @@
-//File only delaing with the middleware functions
+//File only dealing with the middleware functions
+
+const uuid = require('uuid/v4');
 
 const HttpError = require('../models/http-error');
 
 const TEMP_PLACES = [
     {
         id: 'p1',
+        title: 'Peleton',
         description: 'Spot on for your next mocha.',
         location: {
             lat: 48.8554879,
@@ -47,7 +50,26 @@ const getPlaceByUserId = (req, res, next) => {
     }
 
     res.json({ place });
-}
+};
+
+const createPlace = (req, res, next) => {
+    //Object destructuring
+    const { title, description, location, address, creator } = req.body;
+    //New place
+    const createdPlace = {
+        id: uuid(),
+        title, 
+        description,
+        location,
+        address,
+        creator
+    };
+
+    TEMP_PLACES.push(createdPlace);
+
+    res.status(201).json({place: createdPlace});
+};
 
 exports.getPlaceById = getPlaceById;
 exports.getPlaceByUserId = getPlaceByUserId;
+exports.createPlace = createPlace;

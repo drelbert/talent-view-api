@@ -11,9 +11,18 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "uuid": "^3.4.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.2"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drelbert/backend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/drelbert/backend/issues"
+  },
+  "homepage": "https://github.com/drelbert/backend#readme"
 }
