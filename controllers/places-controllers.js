@@ -36,20 +36,20 @@ const getPlaceById = (req, res, next) => {
     res.json({ place });
 };
 
-const getPlaceByUserId = (req, res, next) => {
+const getPlacesByUserId = (req, res, next) => {
     const userId = req.params.uid;
 
-    const place = TEMP_PLACES.find(p => {
+    const place = TEMP_PLACES.filter(p => {
         return p.creator === userId;
     });
 
-    if (!place) {
+    if (!places || places.length === 0) {
         return next(
             new HttpError('No User ID Found.', 404)
             ); 
     }
 
-    res.json({ place });
+    res.json({ places });
 };
 
 const createPlace = (req, res, next) => {
@@ -70,6 +70,28 @@ const createPlace = (req, res, next) => {
     res.status(201).json({place: createdPlace});
 };
 
+const updatedPlace = (req, res, next) => {
+    const { title, description } = req.body;
+    const placeId = req.params.pid;
+
+    const updatedPlace = { ...TEMP_PLACES.find(p => p.id === placeId)};
+    const placeIndex = TEMP_PLACES.findIndex(p => p.id === placeId);
+    updatedPlace.title = title;
+    updatedPlace.description = description;
+
+    TEMP_PLACES[placeIndex] = updatedPlace;
+
+    res.status(200).json({place: updatedPlace});
+};
+
+const deletePlace = (req, res, next) => {
+    const placeId = req.params.pid;
+    TEMP_PLACES = TEMP_PLACES.filter(p => p.id !== placeId);
+    res.status(200).json({ message: 'Place Deleted.' })
+};
+
 exports.getPlaceById = getPlaceById;
-exports.getPlaceByUserId = getPlaceByUserId;
+exports.getPlacesByUserId = getPlacesByUserId;
 exports.createPlace = createPlace;
+exports.updatedPlace = updatedPlace;
+exports.deletePlace = deletePlace;
