@@ -4,7 +4,7 @@ const uuid = require('uuid/v4');
 
 const HttpError = require('../models/http-error');
 
-const TEMP_PLACES = [
+let TEMP_PLACES = [
     {
         id: 'p1',
         title: 'Peleton',
@@ -18,6 +18,7 @@ const TEMP_PLACES = [
     }
 ];
 
+//Set of middleware
 //Function expression with fat arrow
     //Alternative syntax 
         //function getPlaceById() { ... }
@@ -39,13 +40,13 @@ const getPlaceById = (req, res, next) => {
 const getPlacesByUserId = (req, res, next) => {
     const userId = req.params.uid;
 
-    const place = TEMP_PLACES.filter(p => {
+    const places = TEMP_PLACES.filter(p => {
         return p.creator === userId;
     });
 
     if (!places || places.length === 0) {
         return next(
-            new HttpError('No User ID Found.', 404)
+            new HttpError('No places found for this user id.', 404)
             ); 
     }
 

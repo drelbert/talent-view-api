@@ -11,6 +11,7 @@ const app = express();
 app.use(bodyParser.json());
 //Middleware for get
 app.use('/api/places', placesRoutes);
+app.use('/api/users', usersRoutes);
 
 //Middleware for some req that did not get a res
 app.use((req, res, next) => {
