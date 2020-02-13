@@ -1,6 +1,7 @@
 //File only dealing with the middleware functions
 
 const uuid = require('uuid/v4');
+const { validationResult } = require('express-validator');
 
 const HttpError = require('../models/http-error');
 
@@ -54,6 +55,12 @@ const getPlacesByUserId = (req, res, next) => {
 };
 
 const createPlace = (req, res, next) => {
+    const errors = validationResult(req);
+    if(!error.isEmpty()) {
+        console.log(errors);
+        throw new HttpError('Invalid inputs, please check and enter again', 422);
+    }
+
     //Object destructuring
     const { title, description, location, address, creator } = req.body;
     //New place
@@ -72,6 +79,12 @@ const createPlace = (req, res, next) => {
 };
 
 const updatedPlace = (req, res, next) => {
+    const errors = validationResult(req);
+    if(!error.isEmpty()) {
+        console.log(errors);
+        throw new HttpError('Invalid inputs, please update.', 422);
+    }
+
     const { title, description } = req.body;
     const placeId = req.params.pid;
 
@@ -87,6 +100,9 @@ const updatedPlace = (req, res, next) => {
 
 const deletePlace = (req, res, next) => {
     const placeId = req.params.pid;
+    if (!TEMP_PLACES.find(p => p.id == placeId)) {
+        throw new HttpError('No place with that ID found.', 404);
+    }
     TEMP_PLACES = TEMP_PLACES.filter(p => p.id !== placeId);
     res.status(200).json({ message: 'Place Deleted.' })
 };

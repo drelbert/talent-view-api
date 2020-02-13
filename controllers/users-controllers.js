@@ -1,4 +1,5 @@
 const uuid = require('uuid/v4');
+const { validationResult } = require('express-validator');
 
 const HttpError = require('../models/http-error');
 
@@ -16,6 +17,12 @@ const getUsers = (req, res, next) => {
 };
 
 const signup = (req, res, next) => {
+    const errors = validationResult(req);
+    if(!error.isEmpty()) {
+        console.log(errors);
+        throw new HttpError('Invalid inputs, please check and enter again', 422);
+    }
+
     const { name, email, password } = req.body;
 
     //controlling for no email dups
