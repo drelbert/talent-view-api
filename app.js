@@ -1,4 +1,7 @@
 // App server start: npm start
+const fs = require("fs");
+const path = require("path");
+
 var express = require('express');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
@@ -12,8 +15,17 @@ var app = express();
 // Registering the middleware
 app.use(bodyParser.json());
 
-app.use('/api/users', usersRoutes);
+app.use("/uploads/images", express.static(path.join("uploads", "images")));
 
+app.use(function (req, res, next) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE");
+    
+    next();
+});
+
+app.use('/api/users', usersRoutes);
 app.use('/api/projects', projectsRoutes);
 
 app.use(function (req, res, next){
@@ -21,7 +33,12 @@ app.use(function (req, res, next){
     throw error;
 });
 
-app.use( function(error, req, res, next) {
+app.use(function (error, req, res, next) {
+    if (req.file) {
+      fs.unlink(req.file.path, (err) => {
+        console.log(err);
+    });
+    }
     if(res.headerSent) {
         return next(error)
     }
@@ -32,7 +49,7 @@ app.use( function(error, req, res, next) {
 // First starting the backend server with then() function
 // Connecting the backend server with the db with a promise
 mongoose
-    .connect('mongodb+srv://talentAppAdmin:8sMoLjHjRJczwE0Q@cluster0-p6czb.gcp.mongodb.net/dev?retryWrites=true&w=majority')
+    .connect('mongodb+srv://talentAppAdmin:8sMoLjHjRJczwE0Q@cluster0-p6czb.gcp.mongodb.net/talent-view?retryWrites=true&w=majority')
     .then(() => {
         app.listen(5000);
     })

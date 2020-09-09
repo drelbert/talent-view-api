@@ -9,11 +9,11 @@ var User = require("../models/user");
 
 
 var getProjectById = async function (req, res, next) {
-    var projectId = req.params.pid;
+    var userId = req.params.pid;
 
     let project;
     try {
-        project = await Project.findById(projectId);
+        project = await Project.findById(userId);
     } catch (err) {
         let error = new HttpError(
             "Could not complete getting this project", 500
@@ -33,24 +33,26 @@ var getProjectById = async function (req, res, next) {
 var getProjectsByUserId = async function(req, res, next) {
     var userId = req.params.uid
 
-    let projects;
+    // let projects;
+    let userWithProjects;
+
     try {
-        projects = await Project.find({ lead: userId });
+        userWithProjects = await User.findById(userId).populate("projects")
     } catch (err) {
         var error = new HttpError(
-            "Could not find any projects with that user ID.", 500
+            "Fetching failed, please try later.", 500
         );
         return next(error);
     }
 
-    if (!projects || projects.length == 0) {
+    if (!userWithProjects || userWithProjects.projects.length === 0) {
         return next(
             new HttpError("No projects found for that user ID", 404)
         );
     }
-    res.json({ projects: projects.map(project => project.toObject({ getters: true })) });
+    res.json({ 
+        projects: userWithProjects.projects.map(project => project.toObject({ getters: true}))});
 };
-
 
 
 var addProject =  async function (req, res, next) {
@@ -60,36 +62,34 @@ var addProject =  async function (req, res, next) {
         throw new HttpError("Please complete all fields.", 422)
     }
 
-    var { title, description, phase, dueDate, lead, team, updateNotes } = req.body
+    var { title, description, lead, creator } = req.body;
+    
     var addedProject = new Project({
         title,
         description,
-        phase,
-        dueDate,
-        lead,
-        team,
-        updateNotes,
+        lead, 
+        creator
     });
 
     let user;
 
     try {
-        user = await User.findById(lead)
+        user = await User.findById(creator)
     } catch (err) {
-        var error = new HttpError("Could not complete project creation due to incorrect project lead ID.", 500
+        var error = new HttpError("Could not complete project creation, please try again.", 500
         );
         return next(error);
     }
 
     if (!user) {
-        var error = new HttpError("Error, this is an error with the user ID.", 404);
+        var error = new HttpError("Could not find user with provided id.", 404);
         return next (error);
     }
 
     console.log(user);
 
     try {
-        var sessionCurrent = await mongoose.startSession();
+        let sessionCurrent = await mongoose.startSession();
         sessionCurrent.startTransaction();
         await addedProject.save({ session: sessionCurrent });
         user.projects.push(addedProject);  // Establishing connection between the user and project models
@@ -102,7 +102,7 @@ var addProject =  async function (req, res, next) {
         return next(error);
     };
     
-    res.status(201).json({project: addedProject});
+    res.status(201).json({projects: addedProject});
 };
 
 
@@ -114,8 +114,8 @@ var updateProject = async function (req, res, next) {
         );
     }
 
-    var { phase, team } = req.body
-    var projectId = req.params.pid;
+    const { lead, description } = req.body
+    const projectId = req.params.pid;
 
     let project;
     try  {
@@ -125,16 +125,16 @@ var updateProject = async function (req, res, next) {
         "Something has gone wrong.", 500
     );
     return next(error);
-}
+    }
 
-    project.phase = phase;
-    project.team = team;
+    project.lead = lead;
+    project.description = description;
 
     try {
         await project.save();
     } catch (err) {
         let error = new HttpError(
-            "Something has gone wrong.", 500
+            "Something has gone wrong, project was not updated.", 500
         );
         return next(error);
     }
@@ -149,7 +149,7 @@ var deleteProject = async function (req, res, next) {
     let project;
 
     try {
-        project = await Project.findById(projectId).populate("lead");
+        project = await Project.findById(projectId).populate("creator");
     } catch (err) {
         let error = new HttpError(
             "An error occured, place could not be deleted.", 500
@@ -166,8 +166,8 @@ var deleteProject = async function (req, res, next) {
       var sessionCurrent = await mongoose.startSession();
       sessionCurrent.startTransaction();
       await project.remove({ seesion: sessionCurrent });
-      project.lead.projects.pull(project);
-      await project.lead.save({ session: sessionCurrent });
+      project.creator.projects.pull(project);
+      await project.creator.save({ session: sessionCurrent });
       await sessionCurrent.commitTransaction();
     } catch (err) {
         let error = new HttpError(

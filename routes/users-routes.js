@@ -4,6 +4,7 @@ var { check } = require('express-validator');
 var router = express.Router();
 
 var  usersController = require('../controllers/users-controllers');
+var  fileUpload = require("../middleware/file-upload");
 
 router.get('/', usersController.getUsers);
 
@@ -11,6 +12,7 @@ router.get('/:uid', usersController.getUserById);
 
 router.post(
     '/signup', 
+    fileUpload.single("image"),
     [
         check("name")
           .not()
@@ -24,8 +26,6 @@ router.post(
     usersController.signup);
 
 router.post('/login', usersController.login);
-
-router.post('/', usersController.addUser);
 
 router.patch('/:uid', usersController.updateUser);
 

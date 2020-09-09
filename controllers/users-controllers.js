@@ -1,5 +1,6 @@
 var uuid = require("uuid/v4");
 var { validationResult } = require("express-validator");
+var bcrypt = require('bcrypt');
 
 var HttpError = require('../models/http-errors');
 
@@ -18,19 +19,26 @@ var getUsers = async function (req, res, next) {
     res.json({users: users.map(user => user.toObject({ getters: true }))});  // .map to turn the returned array into an object
 };
 
-
-var getUserById = function (req, res) {
+var getUserById = async function (req, res) {
     var userId = req.params.uid;
-    var user = TEMP_USERS.find(u => {
-        return u.id == userId;
-    });
+
+    let user;
+    try {
+        user = await User.findById(userId);
+    } catch (err) {
+        let error = new HttpError(
+            "Could not complete getting this user", 500
+        );
+        return next(error);
+    }
 
     if (!user) {
-        throw new HttpError("No user with that ID", 404);
-    }
-     // console.log('GET-ing the users')
-    res.json({user: user});
+        var error = new HttpError("No users with that ID", 404);
+
+   return next(error);
 }
+    res.json({user: user.toObject({ getters: true }) });
+};
 
 var signup = async function (req, res, next) {
     var errors = validationResult(req);
@@ -58,10 +66,18 @@ var signup = async function (req, res, next) {
         return next(error);
     }
 
+    let hashedPassword;
+    try {
+        hashedPassword = await bcrypt.hash(password, 12);
+    } catch (err) {
+        var error = new HttpError("Could not complete new user creation, please try again.", 500);
+    }
+     
     var userSignedUp = new User({
         name, 
         email, 
-        password,
+        image: req.file.path,
+        password: hashedPassword,
         projects: []
     })
 
@@ -82,7 +98,6 @@ var login = async function (req, res, next) {
     var { email, password } = req.body;
 
     let existingUser;
-
     try {
         existingUser = await User.findOne({ email: email})
     } catch (err) {
@@ -92,31 +107,33 @@ var login = async function (req, res, next) {
         return next(error);
     }
 
-    if (!existingUser || existingUser.password !== password) {
+    if (!existingUser) {
+        var error = new HttpError(
+            "Invalid credentials, please try again", 401
+        );
+        return next(error);
+    }
+    
+    // setting the variable declaration
+    let isValidPassword = false;
+    try {
+    // putting it to use 
+    isValidPassword = await bcrypt.compare(password, existingUser.password);
+    } catch (err) {
+        var error = new HttpError("Could not log you in, please check credentials.", 500
+        );
+        return next(error);
+    }
+
+    if (!isValidPassword) {
         var error = new HttpError(
             "Invalid credentials, please try again", 401
         );
         return next(error);
     }
 
-    res.json({message: "Login successful!"}); 
+    res.json({message: "Login successful!", user: existingUser.toObject({getters: true})}); 
 };
-
-
-// Maybe this is deleted as its too similar to the signup?
-var addUser = function (req, res, next) {
-    var { name, email, password, projectId } = req.body  // Object destructuring in action
-    var addedUser = {
-        id: uuid(), 
-        name, 
-        email,
-        password,
-        projectId
-    };
-    TEMP_USERS.push(addedUser);
-
-    res.status(201).json({user: addedUser});
-}
 
 
 var updateUser = function (req, res, next) {
@@ -134,7 +151,6 @@ var updateUser = function (req, res, next) {
 };
 
 
-
 var deleteUser = function (req, res, next) {
     var userId = req.params.uid;
     TEMP_USERS = TEMP_USERS.filter(u => u.id !== userId);
@@ -145,6 +161,5 @@ exports.getUsers = getUsers;
 exports.getUserById = getUserById;
 exports.signup = signup;
 exports.login = login;
-exports.addUser = addUser;
 exports.updateUser = updateUser;
 exports.deleteUser = deleteUser;

@@ -13,16 +13,24 @@ router.post(
     [
     check('title')
       .isLength({min: 5}), 
-    check('phase')
+    check('description')
       .not()
       .isEmpty(),
-    check('team')
+    check('lead')
       .not()
       .isEmpty()
     ],
     projectsController.addProject);
 
-router.patch('/:pid', projectsController.updateProject);
+router.patch(
+  '/:pid', 
+[ 
+  check("lead")
+  .not()
+  .isEmpty(),
+  check("description").isLength({ min: 5 })
+],
+  projectsController.updateProject);
 
 router.delete("/:pid", projectsController.deleteProject);
 
