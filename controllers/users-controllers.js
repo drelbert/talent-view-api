@@ -1,9 +1,7 @@
 var uuid = require("uuid/v4");
 var { validationResult } = require("express-validator");
-var bcrypt = require('bcrypt');
 
 var HttpError = require('../models/http-errors');
-
 var User = require('../models/user');
 
 
@@ -66,18 +64,12 @@ var signup = async function (req, res, next) {
         return next(error);
     }
 
-    let hashedPassword;
-    try {
-        hashedPassword = await bcrypt.hash(password, 12);
-    } catch (err) {
-        var error = new HttpError("Could not complete new user creation, please try again.", 500);
-    }
      
     var userSignedUp = new User({
         name, 
         email, 
         image: req.file.path,
-        password: hashedPassword,
+        password,
         projects: []
     })
 
@@ -90,7 +82,16 @@ var signup = async function (req, res, next) {
         return next(error);
     }
 
-    res.status(201).json({user: userSignedUp.toObject({ getters: true }) });
+try {
+    await userSignedUp.save();
+} catch (err) {
+    const error = new HttpError(
+        "Sign up failed, please try again.", 500
+    );
+    return next(error);
+}
+
+    res.status(201).json({ userId: userSignedUp.id, email: userSignedUp.email });
 };
 
 
@@ -107,33 +108,18 @@ var login = async function (req, res, next) {
         return next(error);
     }
 
-    if (!existingUser) {
-        var error = new HttpError(
-            "Invalid credentials, please try again", 401
+    if (!existingUser || existingUser.password !== password) {
+        const error = new HttpError(
+          'Invalid credentials, could not log you in.',
+          401
         );
         return next(error);
-    }
-    
-    // setting the variable declaration
-    let isValidPassword = false;
-    try {
-    // putting it to use 
-    isValidPassword = await bcrypt.compare(password, existingUser.password);
-    } catch (err) {
-        var error = new HttpError("Could not log you in, please check credentials.", 500
-        );
-        return next(error);
-    }
+      }
 
-    if (!isValidPassword) {
-        var error = new HttpError(
-            "Invalid credentials, please try again", 401
-        );
-        return next(error);
-    }
-
-    res.json({message: "Login successful!", user: existingUser.toObject({getters: true})}); 
-};
+    res.json({ 
+        message: "Logged in!",
+        user: existingUser.toObject({ getters: true })
+     })}; 
 
 
 var updateUser = function (req, res, next) {

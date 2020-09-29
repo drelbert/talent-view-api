@@ -6,8 +6,8 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 
-var usersRoutes = require('./routes/users-routes');
 var projectsRoutes = require('./routes/projects-routes');
+var usersRoutes = require('./routes/users-routes');
 var HttpError = require('./models/http-errors');
 
 var app = express();
@@ -25,8 +25,9 @@ app.use(function (req, res, next) {
     next();
 });
 
-app.use('/api/users', usersRoutes);
 app.use('/api/projects', projectsRoutes);
+app.use('/api/users', usersRoutes);
+
 
 app.use(function (req, res, next){
     var error = new HttpError("Route not found.", 404);
@@ -49,7 +50,7 @@ app.use(function (error, req, res, next) {
 // First starting the backend server with then() function
 // Connecting the backend server with the db with a promise
 mongoose
-    .connect('mongodb+srv://talentAppAdmin:8sMoLjHjRJczwE0Q@cluster0-p6czb.gcp.mongodb.net/talent-view?retryWrites=true&w=majority')
+    .connect('mongodb+srv://talentAppAdmin:8sMoLjHjRJczwE0Q@cluster0-p6czb.gcp.mongodb.net/talent-view?retryWrites=true&w=majority', {useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true})
     .then(() => {
         app.listen(5000);
     })

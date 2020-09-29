@@ -1,12 +1,15 @@
 var express = require('express');
-var { check } = require('express-validator');  // Using object destructuring to just use the check method, not all the object properties and methods
+// Using object destructuring to just use the checkAuth method, not all the object properties and methods
+var { check } = require('express-validator');  
 var router = express.Router();
 
 var projectsController = require('../controllers/projects-controllers');
 
+
 router.get('/:pid', projectsController.getProjectById);
 
 router.get('/user/:uid', projectsController.getProjectsByUserId);
+
 
 router.post(
     '/', 

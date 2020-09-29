@@ -9,7 +9,7 @@ var User = require("../models/user");
 
 
 var getProjectById = async function (req, res, next) {
-    var userId = req.params.pid;
+    var userId = req.params.uid;
 
     let project;
     try {
@@ -55,11 +55,11 @@ var getProjectsByUserId = async function(req, res, next) {
 };
 
 
-var addProject =  async function (req, res, next) {
+var addProject = async function (req, res, next) {
     var errors = validationResult(req);
     if (!errors.isEmpty()) {
         console.log(errors);
-        throw new HttpError("Please complete all fields.", 422)
+        new HttpError("Invalid inputs passed, please check your entries.", 422);
     }
 
     var { title, description, lead, creator } = req.body;
