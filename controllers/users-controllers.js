@@ -82,16 +82,7 @@ var signup = async function (req, res, next) {
         return next(error);
     }
 
-try {
-    await userSignedUp.save();
-} catch (err) {
-    const error = new HttpError(
-        "Sign up failed, please try again.", 500
-    );
-    return next(error);
-}
-
-    res.status(201).json({ userId: userSignedUp.id, email: userSignedUp.email });
+    res.status(201).json({ user: userSignedUp.toObject({ getters: true }) });
 };
 
 

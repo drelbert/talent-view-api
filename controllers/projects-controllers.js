@@ -10,7 +10,7 @@ var User = require("../models/user");
 
 var getProjectById = async function (req, res, next) {
     var userId = req.params.uid;
-
+  
     let project;
     try {
         project = await Project.findById(userId);
@@ -22,7 +22,7 @@ var getProjectById = async function (req, res, next) {
     }
 
     if (!project) {
-        var error = new HttpError("No projects with that ID", 404);
+        var error = new HttpError("No project with that ID", 404);
 
     return next(error);
 }
