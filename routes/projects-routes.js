@@ -1,39 +1,31 @@
-var express = require('express');
+var express = require("express");
 // Using object destructuring to just use the checkAuth method, not all the object properties and methods
-var { check } = require('express-validator');  
+var { check } = require("express-validator");
 var router = express.Router();
 
-var projectsController = require('../controllers/projects-controllers');
+var projectsController = require("../controllers/projects-controllers");
+// order note, route order has to match controller order
+router.get("/allProjects", projectsController.getAllProjects);
 
+router.get("/:pid", projectsController.getProjectById);
 
-router.get('/:pid', projectsController.getProjectById);
-
-router.get('/user/:uid', projectsController.getProjectsByUserId);
-
+router.get("/user/:uid", projectsController.getProjectsByUserId);
 
 router.post(
-    '/', 
-    [
-    check('title')
-      .isLength({min: 5}), 
-    check('description')
-      .not()
-      .isEmpty(),
-    check('lead')
-      .not()
-      .isEmpty()
-    ],
-    projectsController.addProject);
+  "/",
+  [
+    check("title").isLength({ min: 5 }),
+    check("description").not().isEmpty(),
+    check("lead").not().isEmpty(),
+  ],
+  projectsController.addProject
+);
 
 router.patch(
-  '/:pid', 
-[ 
-  check("lead")
-  .not()
-  .isEmpty(),
-  check("description").isLength({ min: 5 })
-],
-  projectsController.updateProject);
+  "/:pid",
+  [check("lead").not().isEmpty(), check("description").isLength({ min: 5 })],
+  projectsController.updateProject
+);
 
 router.delete("/:pid", projectsController.deleteProject);
 
