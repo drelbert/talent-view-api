@@ -1,15 +1,21 @@
 var express = require("express");
 // Using object destructuring to just use the checkAuth method, not all the object properties and methods
 var { check } = require("express-validator");
-var router = express.Router();
 
 var projectsController = require("../controllers/projects-controllers");
+var checkAuth = require("../middleware/check-auth");
+
+var router = express.Router();
+
+// middleware
 // order note, route order has to match controller order
 router.get("/allProjects", projectsController.getAllProjects);
 
 router.get("/:pid", projectsController.getProjectById);
 
 router.get("/user/:uid", projectsController.getProjectsByUserId);
+
+router.use(checkAuth);
 
 router.post(
   "/",
